@@ -53,6 +53,7 @@
                 );
                 --success-color: #48bb78;
                 --error-color: #f56565;
+                --warning-color: #ecc94b;
                 --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
                     0 10px 10px -5px rgba(0, 0, 0, 0.04);
             }
@@ -74,6 +75,9 @@
                     #5a6fd8 0%,
                     #6b4190 100%
                 );
+                --success-color: #68d391;
+                --error-color: #fc8181;
+                --warning-color: #faf089;
                 --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3),
                     0 10px 10px -5px rgba(0, 0, 0, 0.2);
             }
@@ -530,6 +534,34 @@
                         placeholder="例如：請給我去逛街會用到的5個單字"
                         required
                     ></textarea>
+
+                    <div
+                        class="tips-container"
+                        style="
+                            margin-top: 10px;
+                            border-left-color: var(--warning-color);
+                            background: rgba(236, 201, 75, 0.1);
+                        "
+                    >
+                        <div
+                            class="tips-title"
+                            style="color: var(--warning-color)"
+                        >
+                            ⚠️ 使用建議
+                        </div>
+                        <div
+                            class="tips-content"
+                            style="
+                                color: var(--text-secondary);
+                                font-size: 0.85rem;
+                            "
+                        >
+                            建議每次請求的單字數量控制在
+                            <strong>5～10 個</strong>
+                            以內，避免一次生成太多單字，以免影響 AI
+                            分析品質與學習效果。
+                        </div>
+                    </div>
                 </div>
 
                 <button type="submit" class="submit-button">
