@@ -372,6 +372,45 @@
                 border: 1px solid rgba(245, 101, 101, 0.3);
             }
 
+            .result-container {
+                display: none;
+                margin-top: 20px;
+                padding: 20px;
+                background: rgba(102, 126, 234, 0.1);
+                border-radius: 12px;
+                border: 1px solid rgba(102, 126, 234, 0.3);
+            }
+
+            .result-title {
+                font-weight: 600;
+                color: var(--text-primary);
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+                font-size: 1.1rem;
+            }
+
+            .result-content {
+                color: var(--text-secondary);
+                line-height: 1.6;
+            }
+
+            .new-request-button {
+                padding: 10px 20px;
+                background: var(--input-bg);
+                color: var(--text-primary);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                font-size: 0.9rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                margin-top: 15px;
+            }
+
+            .new-request-button:hover {
+                background: var(--border-color);
+            }
+
             @keyframes slideIn {
                 from {
                     opacity: 0;
@@ -537,6 +576,7 @@
 
                     <div
                         class="tips-container"
+                        id="usageTips"
                         style="
                             margin-top: 10px;
                             border-left-color: var(--warning-color);
@@ -605,6 +645,15 @@
                     </div>
                 </div>
             </div>
+
+            <div id="resultContainer" class="result-container">
+                <div class="result-title" id="resultTitle">
+                    ✅ 學習單字已生成！
+                </div>
+                <div class="result-content" id="resultContent">
+                    您的學習單字已成功生成並發送到您的信箱，請查收！
+                </div>
+            </div>
         </div>
 
         <script>
@@ -647,10 +696,6 @@
                 return localStorage.getItem('userEmail');
             }
 
-            function clearEmailFromLocalStorage() {
-                localStorage.removeItem('userEmail');
-            }
-
             // 進度條控制
             let progressInterval;
             let currentStep = 0;
@@ -680,6 +725,10 @@
                 const progressFill = document.getElementById('progressFill');
                 const progressText = document.getElementById('progressText');
                 const tipsContent = document.getElementById('tipsContent');
+                const usageTips = document.getElementById('usageTips');
+
+                // 隱藏使用提示
+                usageTips.style.display = 'none';
 
                 progressContainer.style.display = 'block';
                 currentStep = 0;
@@ -731,6 +780,40 @@
                     'none';
             }
 
+            // 顯示結果
+            function showResult(success = true, message = '') {
+                const resultContainer =
+                    document.getElementById('resultContainer');
+                const resultTitle = document.getElementById('resultTitle');
+                const resultContent = document.getElementById('resultContent');
+                const usageTips = document.getElementById('usageTips');
+
+                if (success) {
+                    resultTitle.style.display = 'block';
+                    resultTitle.innerHTML = '✅ 學習單字已生成！';
+                    resultContent.innerHTML =
+                        message ||
+                        '您的學習單字已成功生成並發送到您的信箱，請查收！';
+                } else {
+                    resultTitle.style.display = 'none';
+                    resultContent.innerHTML = `<span style="color: var(--error-color)">${
+                        message || '生成過程中出現錯誤，請稍後再試。'
+                    }</span>`;
+                }
+
+                resultContainer.style.display = 'block';
+                usageTips.style.display = 'none';
+
+                // 添加新請求功能
+                document.getElementById('newRequestButton').onclick =
+                    function () {
+                        resultContainer.style.display = 'none';
+                        usageTips.style.display = 'block';
+                        document.getElementById('situation').value = '';
+                        document.getElementById('situation').focus();
+                    };
+            }
+
             // 顯示訊息
             function showMessage(text, type) {
                 const messageEl = document.getElementById('message');
@@ -738,9 +821,12 @@
                 messageEl.className = `message ${type}`;
                 messageEl.style.display = 'block';
 
-                setTimeout(() => {
-                    messageEl.style.display = 'none';
-                }, 5000);
+                // 只對錯誤訊息設置自動隱藏
+                if (type === 'error') {
+                    setTimeout(() => {
+                        messageEl.style.display = 'none';
+                    }, 5000);
+                }
             }
 
             // 設定載入狀態
@@ -816,11 +902,10 @@
 
                             setTimeout(() => {
                                 stopProgress();
-                                showMessage(
-                                    '✅ 太棒了！學習單字已成功生成並發送到您的信箱，請查收！',
-                                    'success'
+                                showResult(
+                                    true,
+                                    '✅ 太棒了！學習單字已成功生成並發送到您的信箱，請查收！'
                                 );
-                                // 不重置email欄位，保留給下次使用
                                 document.getElementById('situation').value = '';
                             }, 2000);
                         } else {
@@ -828,12 +913,12 @@
                             const errorData = await response
                                 .json()
                                 .catch(() => ({}));
-                            showMessage(
+                            showResult(
+                                false,
                                 `❌ 請求失敗：${
                                     errorData.message ||
                                     '伺服器錯誤，請稍後再試'
-                                }`,
-                                'error'
+                                }`
                             );
                         }
                     } catch (error) {
@@ -844,14 +929,14 @@
                             error.name === 'TypeError' &&
                             error.message.includes('fetch')
                         ) {
-                            showMessage(
-                                '❌ 連接失敗：可能是跨域問題或網路不穩定。您可以嘗試：\n1. 重新整理頁面後再試\n2. 檢查網路連接\n3. 稍後再試',
-                                'error'
+                            showResult(
+                                false,
+                                '❌ 連接失敗：可能是跨域問題或網路不穩定。您可以嘗試：\n1. 重新整理頁面後再試\n2. 檢查網路連接\n3. 稍後再試'
                             );
                         } else {
-                            showMessage(
-                                '❌ 網路連接錯誤，請檢查您的網路連接後重試',
-                                'error'
+                            showResult(
+                                false,
+                                '❌ 網路連接錯誤，請檢查您的網路連接後重試'
                             );
                         }
                     } finally {
@@ -883,6 +968,11 @@
 
                 // 每30秒重新隨機化浮動元素
                 setInterval(randomizeFloatingElements, 30000);
+
+                // 確保結果容器是隱藏的，提示是顯示的
+                document.getElementById('resultContainer').style.display =
+                    'none';
+                document.getElementById('usageTips').style.display = 'block';
             });
         </script>
     </body>
